@@ -18,7 +18,7 @@ import java.util.List;
 public class ProductController {
     private ProductService productService;
 
-    @GetMapping
+    @GetMapping("/all")
     @Operation(summary = "List all products", description = "Retrieves a list of products, optionally filtered by categories, sizes, and sorted by price.")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved the list of products")
     public ResponseEntity<Object> findAll(
@@ -60,20 +60,55 @@ public class ProductController {
                 .build());
     }
 
-    @DeleteMapping("/{sku}")
+    @DeleteMapping()
     @Operation(summary = "Delete a product", description = "Deletes a product by SKU.")
     @ApiResponse(responseCode = "200", description = "Product deleted successfully")
-    public ResponseEntity<Object> delete(@PathVariable String sku) {
+    public ResponseEntity<Object> delete(@RequestParam String sku) {
         return productService.delete(sku);
     }
 
-    @GetMapping("/{sku}")
+    @GetMapping()
     @Operation(summary = "Get a product by SKU", description = "Retrieves a single product by its SKU.")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved the product")
     @ApiResponse(responseCode = "404", description = "Product not found")
     public ResponseEntity<Object> getProductBySku(
-            @PathVariable @Parameter(description = "SKU of the product to retrieve", example = "12345") String sku) {
+            @RequestParam @Parameter(description = "SKU of the product to retrieve", example = "12345") String sku) {
         return productService.get(sku);
+    }
+
+    @PutMapping(consumes = "multipart/form-data")
+    @Operation(summary = "Update an existing product", description = "Updates an existing product by SKU.")
+    @ApiResponse(responseCode = "200", description = "Product updated successfully")
+    @ApiResponse(responseCode = "404", description = "Product not found")
+    public ResponseEntity<Object> updateProduct(
+            @RequestParam("skuExisting") String skuExisting,
+            @RequestParam("sku") String sku,
+            @RequestParam("name") String name,
+            @RequestParam("category") String category,
+            @RequestParam("description") String description,
+            @RequestParam("size") String size,
+            @RequestParam("weight") String weight,
+            @RequestParam("price") Double price,
+            @RequestParam("priceUnitary") Double priceUnitary,
+            @RequestParam("priceWholesale") Double priceWholesale,
+            @RequestParam("quantity") Integer quantity,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
+
+        ProductDTO productDTO = ProductDTO.builder()
+                .name(name)
+                .sku(sku)
+                .category(category)
+                .description(description)
+                .size(size)
+                .weight(weight)
+                .price(price)
+                .priceUnitary(priceUnitary)
+                .priceWholesale(priceWholesale)
+                .quantity(quantity)
+                .image(image != null && !image.isEmpty() ? image : null)
+                .build();
+
+        return productService.update(skuExisting,productDTO);
     }
 
 

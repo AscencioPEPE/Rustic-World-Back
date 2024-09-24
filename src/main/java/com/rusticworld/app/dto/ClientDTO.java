@@ -13,6 +13,9 @@ public class ClientDTO {
     @Schema(description = "Name of the Client Max 100 characters", example = "Rounded Clay Pot")
     private String name;
 
+    @Schema(description = "Name of the Client Max 100 characters", example = "Rounded Clay Pot")
+    private String nameClient;
+
     @Schema(description = "Email of the Client Max 100 characters", example = "Rounded Clay Pot")
     private String email;
 
@@ -30,6 +33,9 @@ public class ClientDTO {
 
     @Schema(description = "Address of the Client Max 100 characters", example = "Rounded Clay Pot")
     private String city;
+
+    @Schema(description = "Address of the Client Max 100 characters", example = "Rounded Clay Pot")
+    private String clientType;
 
     @Schema(description = "Tax ID of the Client Max 100 characters", example = "Rounded Clay Pot")
     private String taxId;

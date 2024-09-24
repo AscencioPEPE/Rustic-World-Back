@@ -3,6 +3,7 @@ package com.rusticworld.app.service;
 import com.rusticworld.app.dao.ProductDAO;
 import com.rusticworld.app.dao.ProductListPaginatedDAO;
 import com.rusticworld.app.dto.ProductDTO;
+import com.rusticworld.app.exception.ProductException;
 import com.rusticworld.app.model.ProductEntity;
 import com.rusticworld.app.repository.ProductRepository;
 import com.rusticworld.app.utils.ProductSpecification;
@@ -16,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +28,6 @@ import java.util.Optional;
 @AllArgsConstructor
 public class ProductService {
     private ProductRepository productRepository;
-    private ImageService imageService;
 
     public ResponseEntity<Object> getAll(List<String> categories, String priceOrder, Integer limit, Integer page) {
         Specification<ProductEntity> spec = Specification.where(null);
@@ -82,6 +84,34 @@ public class ProductService {
         return ResponseEntity.ok().body(StringUtils.PRODUCT_DELETED);
     }
 
+    @Transactional
+    public ResponseEntity<Object> update(String skuExisting, ProductDTO productDTO) {
+        Optional<ProductEntity> productOpt = productRepository.findBySku(skuExisting);
+        if (productOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(StringUtils.PRODUCT_NOT_FOUND + productDTO.getSku());
+        }
+
+        ProductEntity productEntity = productOpt.get();
+        productEntity.setName(productDTO.getName());
+        productEntity.setSku(productDTO.getSku());
+        productEntity.setCategory(productDTO.getCategory());
+        productEntity.setDescription(productDTO.getDescription());
+        productEntity.setSize(productDTO.getSize());
+        productEntity.setWeight(productDTO.getWeight());
+        productEntity.setPrice(productDTO.getPrice());
+        productEntity.setPriceUnitary(productDTO.getPriceUnitary());
+        productEntity.setPriceWholesale(productDTO.getPriceWholesale());
+        productEntity.setQuantity(productDTO.getQuantity());
+        if (productDTO.getImage() != null && !productDTO.getImage().isEmpty()) {
+            productEntity.setImage(convertMultipartFileToBytes(productDTO.getImage()));
+        }
+        productRepository.save(productEntity);
+
+        return ResponseEntity.ok().body(toDAO(productEntity));
+    }
+
+
     private ProductEntity fromDTO(ProductDTO product) {
         return ProductEntity.builder()
                 .name(product.getName())
@@ -94,7 +124,7 @@ public class ProductService {
                 .priceUnitary(product.getPriceUnitary())
                 .priceWholesale(product.getPriceWholesale())
                 .quantity(product.getQuantity())
-                .image(imageService.getUrlImage(product.getImage(), product.getName()))
+                .image(convertMultipartFileToBytes(product.getImage()))
                 .build();
     }
 
@@ -112,6 +142,14 @@ public class ProductService {
                 .quantity(product.getQuantity())
                 .image(product.getImage())
                 .build();
+    }
+
+    private byte[] convertMultipartFileToBytes(MultipartFile file) {
+        try {
+            return file.getBytes();
+        } catch (IOException e) {
+            throw new ProductException("Error converting file to byte array", e);
+        }
     }
 
 }

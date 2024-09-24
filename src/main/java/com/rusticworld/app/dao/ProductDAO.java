@@ -39,5 +39,5 @@ public class ProductDAO {
     private Integer quantity;
 
     @Schema(description = "Url of the product saved locally", example = "C:\\Users\\pepej\\Desktop\\Artetermos.com-master")
-    private String image;
+    private byte[] image;
 }

@@ -45,6 +45,7 @@ public class ProductEntity {
     @Column(name = "quantity")
     private Integer quantity;
 
-    @Column(name = "image_url")
-    private String image;
+    @Lob
+    @Column(name = "image", columnDefinition = "MEDIUMBLOB")
+    private byte[] image;
 }

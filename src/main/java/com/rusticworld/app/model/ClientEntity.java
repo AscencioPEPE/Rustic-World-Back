@@ -20,6 +20,9 @@ public class ClientEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "name-client")
+    private String nameClient;
+
     @Column(name = "email")
     private String email;
 
@@ -37,6 +40,9 @@ public class ClientEntity {
 
     @Column(name = "city")
     private String city;
+
+    @Column(name = "client-type")
+    private String clientType;
 
     @Column(name = "tax_id")
     private String taxId;
