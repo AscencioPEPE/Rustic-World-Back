@@ -13,6 +13,10 @@ public class ClientSpecification {
         return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("name"), prefix + "%");
     }
 
+    public static Specification<ClientEntity> nameClientStartsWith(String prefix) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("nameClient"), prefix + "%");
+    }
+
 
     public static Specification<ClientEntity> hasClientType(List<String> clientType) {
         return (root, query, builder) -> {

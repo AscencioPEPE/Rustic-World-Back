@@ -15,12 +15,12 @@ public class ProductOrderedService {
         return productOrderedRepository.save(fromDTO(productDTO));
     }
 
-    public ProductOrderedEntity get(String sku) {
+    public ProductOrderedEntity get(Long sku) {
         return productOrderedRepository.findBySku(sku)
                 .orElse(null);
     }
 
-    public void delete(String sku) {
+    public void delete(Long sku) {
         productOrderedRepository.findBySku(sku)
                 .ifPresent(product -> productOrderedRepository.delete(product));
     }

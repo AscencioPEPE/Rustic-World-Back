@@ -56,9 +56,10 @@ public class ClientController {
             @RequestParam(required = false, defaultValue = "asc") @Parameter(description = "Order of name sorting, 'asc' or 'desc'", example = "asc") String sortOrder,
             @RequestParam @Parameter(description = "Number of results per page", example = "10") Integer limit,
             @RequestParam @Parameter(description = "Page number", example = "1") Integer page,
-            @RequestParam(required = false) @Parameter(description = "Name prefix to filter clients whose names start with these letters", example = "Jo") String namePrefix
+            @RequestParam(required = false) @Parameter(description = "Name prefix to filter clients whose names start with these letters", example = "Jo") String namePrefix,
+            @RequestParam(required = false) @Parameter(description = "Name prefix to filter clients whose names start with these letters", example = "Jo") String clientNamePrefix
     ) {
-        return clientService.getAll(clientTypes, sortOrder, limit, page,namePrefix);
+        return clientService.getAll(clientTypes, sortOrder, limit, page,namePrefix,clientNamePrefix);
     }
 
 }

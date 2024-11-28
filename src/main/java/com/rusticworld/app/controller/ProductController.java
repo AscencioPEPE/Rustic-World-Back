@@ -1,6 +1,7 @@
 package com.rusticworld.app.controller;
 
 import com.rusticworld.app.dto.ProductDTO;
+import com.rusticworld.app.dto.VariantDTO;
 import com.rusticworld.app.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,9 +26,10 @@ public class ProductController {
             @RequestParam(required = false) @Parameter(description = "List of categories to filter", example = "electronics, books") List<String> categories,
             @RequestParam(required = false, defaultValue = "asc") @Parameter(description = "Order of price sorting, 'asc' or 'desc'", example = "asc") String priceOrder,
             @RequestParam @Parameter(description = "Number of results per page", example = "10") Integer limit,
-            @RequestParam @Parameter(description = "Page number", example = "1") Integer page
+            @RequestParam @Parameter(description = "Page number", example = "1") Integer page,
+            @RequestParam(required = false) @Parameter(description = "sku prefix to filter products whose names start with these letters", example = "Jo") String namePrefix
     ) {
-        return productService.getAll(categories, priceOrder, limit, page);
+        return productService.getAll(categories, priceOrder, limit, page, namePrefix);
     }
 
     @PostMapping(consumes = "multipart/form-data")
@@ -35,7 +37,7 @@ public class ProductController {
     @ApiResponse(responseCode = "200", description = "Product created successfully")
     @ApiResponse(responseCode = "400", description = "Product not created successfully")
     public ResponseEntity<Object> save(@RequestParam("name") String name,
-                                       @RequestParam("sku") String sku,
+                                       @RequestParam("sku") Long sku,
                                        @RequestParam("category") String category,
                                        @RequestParam("description") String description,
                                        @RequestParam("size") String size,
@@ -44,7 +46,8 @@ public class ProductController {
                                        @RequestParam("priceUnitary") Double priceUnitary,
                                        @RequestParam("priceWholesale") Double priceWholesale,
                                        @RequestParam("quantity") Integer quantity,
-                                       @RequestParam("image") MultipartFile image) {
+                                       @RequestParam("image") MultipartFile image,
+                                       @RequestPart("variants") List<VariantDTO> variants) {
         return productService.save(ProductDTO.builder()
                 .name(name)
                 .sku(sku)
@@ -57,13 +60,14 @@ public class ProductController {
                 .priceWholesale(priceWholesale)
                 .quantity(quantity)
                 .image(image)
+                .variants(variants)
                 .build());
     }
 
     @DeleteMapping()
     @Operation(summary = "Delete a product", description = "Deletes a product by SKU.")
     @ApiResponse(responseCode = "200", description = "Product deleted successfully")
-    public ResponseEntity<Object> delete(@RequestParam String sku) {
+    public ResponseEntity<Object> delete(@RequestParam Long sku) {
         return productService.delete(sku);
     }
 
@@ -72,7 +76,7 @@ public class ProductController {
     @ApiResponse(responseCode = "200", description = "Successfully retrieved the product")
     @ApiResponse(responseCode = "404", description = "Product not found")
     public ResponseEntity<Object> getProductBySku(
-            @RequestParam @Parameter(description = "SKU of the product to retrieve", example = "12345") String sku) {
+            @RequestParam @Parameter(description = "SKU of the product to retrieve", example = "12345") Long sku) {
         return productService.get(sku);
     }
 
@@ -81,8 +85,8 @@ public class ProductController {
     @ApiResponse(responseCode = "200", description = "Product updated successfully")
     @ApiResponse(responseCode = "404", description = "Product not found")
     public ResponseEntity<Object> updateProduct(
-            @RequestParam("skuExisting") String skuExisting,
-            @RequestParam("sku") String sku,
+            @RequestParam("skuExisting") Long skuExisting,
+            @RequestParam("sku") Long sku,
             @RequestParam("name") String name,
             @RequestParam("category") String category,
             @RequestParam("description") String description,

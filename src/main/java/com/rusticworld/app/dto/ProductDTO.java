@@ -4,6 +4,8 @@ import lombok.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 
 @Getter
 @Setter
@@ -16,7 +18,7 @@ public class ProductDTO {
     private String name;
 
     @Schema(description = "sku of the product", example = "Combine name with color")
-    private String sku;
+    private Long sku;
 
     @Schema(description = "category of the product", example = "Combine name with color")
     private String category;
@@ -44,4 +46,7 @@ public class ProductDTO {
 
     @Schema(description = "Url of the product saved locally", example = "C:\\Users\\pepej\\Desktop\\Artetermos.com-master")
     private MultipartFile image;
+
+    @Schema(description = "List of variants", example = "1500.00")
+    private List<VariantDTO> variants;
 }

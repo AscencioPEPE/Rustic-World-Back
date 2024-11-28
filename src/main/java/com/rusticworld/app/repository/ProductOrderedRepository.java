@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface ProductOrderedRepository extends JpaRepository <ProductOrderedEntity,Long> {
-    Optional<ProductOrderedEntity> findBySku(String sku);
+    Optional<ProductOrderedEntity> findBySku(Long sku);
 }

@@ -3,6 +3,8 @@ package com.rusticworld.app.dao;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -15,7 +17,7 @@ public class ProductDAO {
     private String category;
 
     @Schema(description = "sku of the product", example = "Combine name with color")
-    private String sku;
+    private Long sku;
 
     @Schema(description = "description of the product (optional)", example = "With any aggregations etc...")
     private String description;
@@ -40,4 +42,6 @@ public class ProductDAO {
 
     @Schema(description = "Url of the product saved locally", example = "C:\\Users\\pepej\\Desktop\\Artetermos.com-master")
     private byte[] image;
+
+    private List<VariantDAO> variants;
 }

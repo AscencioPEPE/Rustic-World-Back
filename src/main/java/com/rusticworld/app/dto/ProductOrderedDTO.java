@@ -14,7 +14,7 @@ public class ProductOrderedDTO {
     private String name;
 
     @Schema(description = "sku of the product", example = "Combine name with color")
-    private String sku;
+    private Long sku;
 
     @Schema(description = "category of the product", example = "Combine name with color")
     private String category;

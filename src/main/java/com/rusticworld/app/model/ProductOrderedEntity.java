@@ -19,7 +19,7 @@ public class ProductOrderedEntity {
     private String name;
 
     @Column(name = "sku", nullable = false)
-    private String sku;
+    private Long sku;
 
     @Column(name = "category", nullable = false)
     private String category;

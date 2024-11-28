@@ -41,13 +41,16 @@ public class ClientService {
                 .body(StringUtils.CLIENT_NOT_FOUND + name);
     }
 
-    public ResponseEntity<Object> getAll(List<String> clientTypes, String sortOrder, Integer limit, Integer page, String namePrefix) {
+    public ResponseEntity<Object> getAll(List<String> clientTypes, String sortOrder, Integer limit, Integer page, String namePrefix, String clientNamePrefix) {
         Specification<ClientEntity> spec = Specification.where(null);
         if (clientTypes != null && !clientTypes.isEmpty()) {
             spec = spec.and(ClientSpecification.hasClientType(clientTypes));
         }
         if (namePrefix != null && !namePrefix.isEmpty()) {
             spec = spec.and(ClientSpecification.nameStartsWith(namePrefix));
+        }
+        if (clientNamePrefix != null && !clientNamePrefix.isEmpty()) {
+            spec = spec.and(ClientSpecification.nameClientStartsWith(clientNamePrefix));
         }
         Sort sort;
         if ("desc".equalsIgnoreCase(sortOrder)) {

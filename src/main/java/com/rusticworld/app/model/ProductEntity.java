@@ -3,6 +3,8 @@ package com.rusticworld.app.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,7 +21,7 @@ public class ProductEntity {
     private String name;
 
     @Column(name = "sku", nullable = false)
-    private String sku;
+    private Long sku;
 
     @Column(name = "category", nullable = false)
     private String category;
@@ -48,4 +50,7 @@ public class ProductEntity {
     @Lob
     @Column(name = "image", columnDefinition = "MEDIUMBLOB")
     private byte[] image;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VariantProductEntity> variants;
 }

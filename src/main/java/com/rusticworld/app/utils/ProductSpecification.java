@@ -1,6 +1,7 @@
 package com.rusticworld.app.utils;
 
 import com.rusticworld.app.model.ProductEntity;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
@@ -12,7 +13,15 @@ public class ProductSpecification {
             if (categories == null || categories.isEmpty()) {
                 return builder.conjunction();
             }
-            return root.get("category").in(categories);
+
+            Predicate[] predicates = categories.stream()
+                    .map(category -> builder.like(root.get("category"), "%" + category + "%"))
+                    .toArray(Predicate[]::new);
+            return builder.and(predicates);
         };
+    }
+
+    public static Specification<ProductEntity> nameStartsWith(String prefix) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("name"), prefix + "%");
     }
 }
