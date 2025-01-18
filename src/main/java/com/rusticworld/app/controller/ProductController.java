@@ -30,6 +30,13 @@ public class ProductController {
         return productService.getAll(categories, priceOrder, limit, page, namePrefix);
     }
 
+    @GetMapping("/all/admin")
+    @Operation(summary = "List all products", description = "Retrieves a list of products, optionally filtered by categories, sizes, and sorted by price.")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved the list of products")
+    public ResponseEntity<Object> findAll() {
+        return productService.getAll();
+    }
+
     @PostMapping()
     @Operation(summary = "Create a new product", description = "Creates a new product in the system.")
     @ApiResponse(responseCode = "200", description = "Product created successfully")

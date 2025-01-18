@@ -67,6 +67,11 @@ public class ProductService {
         return ResponseEntity.ok(response);
     }
 
+    public ResponseEntity<Object> getAll() {
+        List<ProductEntity> productPage = productRepository.findAll();
+        return ResponseEntity.ok(productPage);
+    }
+
     @Transactional
     public ResponseEntity<Object> save(ProductDTO productDTO) {
         Optional<ProductEntity> productOpt = productRepository.findBySku(productDTO.getSku());
