@@ -3,6 +3,7 @@ package com.rusticworld.app.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -51,6 +52,11 @@ public class ProductEntity {
     @Column(name = "image", columnDefinition = "MEDIUMBLOB")
     private byte[] image;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<VariantProductEntity> variants;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            name = "product_variant_mapping",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "variant_id")
+    )
+    private List<VariantProductEntity> variants = new ArrayList<>();
 }

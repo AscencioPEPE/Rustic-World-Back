@@ -1,7 +1,6 @@
 package com.rusticworld.app.controller;
 
 import com.rusticworld.app.dto.ProductDTO;
-import com.rusticworld.app.dto.VariantDTO;
 import com.rusticworld.app.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,7 +8,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -32,36 +30,12 @@ public class ProductController {
         return productService.getAll(categories, priceOrder, limit, page, namePrefix);
     }
 
-    @PostMapping(consumes = "multipart/form-data")
+    @PostMapping()
     @Operation(summary = "Create a new product", description = "Creates a new product in the system.")
     @ApiResponse(responseCode = "200", description = "Product created successfully")
     @ApiResponse(responseCode = "400", description = "Product not created successfully")
-    public ResponseEntity<Object> save(@RequestParam("name") String name,
-                                       @RequestParam("sku") Long sku,
-                                       @RequestParam("category") String category,
-                                       @RequestParam("description") String description,
-                                       @RequestParam("size") String size,
-                                       @RequestParam("weight") String weight,
-                                       @RequestParam("price") Double price,
-                                       @RequestParam("priceUnitary") Double priceUnitary,
-                                       @RequestParam("priceWholesale") Double priceWholesale,
-                                       @RequestParam("quantity") Integer quantity,
-                                       @RequestParam("image") MultipartFile image,
-                                       @RequestPart("variants") List<VariantDTO> variants) {
-        return productService.save(ProductDTO.builder()
-                .name(name)
-                .sku(sku)
-                .category(category)
-                .description(description)
-                .size(size)
-                .weight(weight)
-                .price(price)
-                .priceUnitary(priceUnitary)
-                .priceWholesale(priceWholesale)
-                .quantity(quantity)
-                .image(image)
-                .variants(variants)
-                .build());
+    public ResponseEntity<Object> save(@RequestBody ProductDTO productDTO) {
+        return productService.save(productDTO);
     }
 
     @DeleteMapping()
@@ -80,38 +54,13 @@ public class ProductController {
         return productService.get(sku);
     }
 
-    @PutMapping(consumes = "multipart/form-data")
+    @PutMapping()
     @Operation(summary = "Update an existing product", description = "Updates an existing product by SKU.")
     @ApiResponse(responseCode = "200", description = "Product updated successfully")
     @ApiResponse(responseCode = "404", description = "Product not found")
     public ResponseEntity<Object> updateProduct(
             @RequestParam("skuExisting") Long skuExisting,
-            @RequestParam("sku") Long sku,
-            @RequestParam("name") String name,
-            @RequestParam("category") String category,
-            @RequestParam("description") String description,
-            @RequestParam("size") String size,
-            @RequestParam("weight") String weight,
-            @RequestParam("price") Double price,
-            @RequestParam("priceUnitary") Double priceUnitary,
-            @RequestParam("priceWholesale") Double priceWholesale,
-            @RequestParam("quantity") Integer quantity,
-            @RequestParam(value = "image", required = false) MultipartFile image) {
-
-        ProductDTO productDTO = ProductDTO.builder()
-                .name(name)
-                .sku(sku)
-                .category(category)
-                .description(description)
-                .size(size)
-                .weight(weight)
-                .price(price)
-                .priceUnitary(priceUnitary)
-                .priceWholesale(priceWholesale)
-                .quantity(quantity)
-                .image(image != null && !image.isEmpty() ? image : null)
-                .build();
-
+            @RequestBody ProductDTO productDTO) {
         return productService.update(skuExisting,productDTO);
     }
 

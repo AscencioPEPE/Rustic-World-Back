@@ -4,10 +4,10 @@ import com.rusticworld.app.dao.ProductDAO;
 import com.rusticworld.app.dao.ProductListPaginatedDAO;
 import com.rusticworld.app.dao.VariantDAO;
 import com.rusticworld.app.dto.ProductDTO;
-import com.rusticworld.app.exception.ProductException;
 import com.rusticworld.app.model.ProductEntity;
 import com.rusticworld.app.model.VariantProductEntity;
 import com.rusticworld.app.repository.ProductRepository;
+import com.rusticworld.app.repository.VariantProductRepository;
 import com.rusticworld.app.utils.ProductSpecification;
 import com.rusticworld.app.utils.StringUtils;
 import lombok.AllArgsConstructor;
@@ -19,17 +19,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
 @AllArgsConstructor
 public class ProductService {
     private ProductRepository productRepository;
+    private VariantProductRepository variantProductRepository;
+
+    private static final String PRODUCT_MISTAKE = "Product with SKU ";
 
     public ResponseEntity<Object> getAll(List<String> categories, String priceOrder, Integer limit, Integer page, String namePrefix) {
         Specification<ProductEntity> spec = Specification.where(null);
@@ -69,32 +72,9 @@ public class ProductService {
         Optional<ProductEntity> productOpt = productRepository.findBySku(productDTO.getSku());
         if (productOpt.isPresent()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Product with SKU " + productDTO.getSku() + " already exists.");
+                    .body(PRODUCT_MISTAKE + productDTO.getSku() + " already exists.");
         }
-        try {
-            ProductEntity product = fromDTO(productDTO);
-            if (productDTO.getVariants() != null && !productDTO.getVariants().isEmpty()) {
-                List<VariantProductEntity> variants = productDTO.getVariants().stream()
-                        .map(variantDTO -> {
-                            try {
-                                return VariantProductEntity.builder()
-                                        .variantName(variantDTO.getVariantName())
-                                        .variantColor(variantDTO.getVariantColor())
-                                        .variantImage(variantDTO.getVariantImage() != null ? variantDTO.getVariantImage(): null)
-                                        .product(product)
-                                        .build();
-                            } catch (Exception e) {
-                                throw new RuntimeException("Error processing variant image: " + e.getMessage(), e);
-                            }
-                        }).toList();
-                product.setVariants(variants);
-            }
-            ProductEntity savedProduct = productRepository.save(product);
-            return ResponseEntity.ok(toDAO(savedProduct));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error saving product: " + e.getMessage());
-        }
+        return ResponseEntity.ok(toDAO(productRepository.save(fromDTO(productDTO))));
     }
 
     public ResponseEntity<Object> get(Long sku) {
@@ -108,7 +88,8 @@ public class ProductService {
         if (productOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(StringUtils.PRODUCT_NOT_FOUND + sku);
         }
-        productRepository.delete(productOpt.get());
+        ProductEntity product = productOpt.get();
+        productRepository.delete(product);
         return ResponseEntity.ok().body(StringUtils.PRODUCT_DELETED);
     }
 
@@ -117,44 +98,70 @@ public class ProductService {
         Optional<ProductEntity> productOpt = productRepository.findBySku(skuExisting);
         if (productOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(StringUtils.PRODUCT_NOT_FOUND + productDTO.getSku());
+                    .body(PRODUCT_MISTAKE + skuExisting + " not found.");
         }
-
-        ProductEntity productEntity = productOpt.get();
-        productEntity.setName(productDTO.getName());
-        productEntity.setSku(productDTO.getSku());
-        productEntity.setCategory(productDTO.getCategory());
-        productEntity.setDescription(productDTO.getDescription());
-        productEntity.setSize(productDTO.getSize());
-        productEntity.setWeight(productDTO.getWeight());
-        productEntity.setPrice(productDTO.getPrice());
-        productEntity.setPriceUnitary(productDTO.getPriceUnitary());
-        productEntity.setPriceWholesale(productDTO.getPriceWholesale());
-        productEntity.setQuantity(productDTO.getQuantity());
-        if (productDTO.getImage() != null && !productDTO.getImage().isEmpty()) {
-            productEntity.setImage(convertMultipartFileToBytes(productDTO.getImage()));
+        ProductEntity existingProduct = productOpt.get();
+        if (!skuExisting.equals(productDTO.getSku())) {
+            Optional<ProductEntity> conflictingProduct = productRepository.findBySku(productDTO.getSku());
+            if (conflictingProduct.isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(PRODUCT_MISTAKE + productDTO.getSku() + " already exists.");
+            }
         }
-        productRepository.save(productEntity);
-
-        return ResponseEntity.ok().body(toDAO(productEntity));
+        existingProduct.setName(productDTO.getName());
+        existingProduct.setSku(productDTO.getSku());
+        existingProduct.setCategory(productDTO.getCategory());
+        existingProduct.setDescription(productDTO.getDescription());
+        existingProduct.setSize(productDTO.getSize());
+        existingProduct.setWeight(productDTO.getWeight());
+        existingProduct.setPrice(productDTO.getPrice());
+        existingProduct.setPriceUnitary(productDTO.getPriceUnitary());
+        existingProduct.setPriceWholesale(productDTO.getPriceWholesale());
+        existingProduct.setQuantity(productDTO.getQuantity());
+        if (productDTO.getImage() != null) {
+            existingProduct.setImage(productDTO.getImage());
+        }
+        if (productDTO.getVariants() != null) {
+            List<VariantProductEntity> newVariants = productDTO.getVariants().stream()
+                    .map(variantDTO -> VariantProductEntity.builder()
+                            .variantName(variantDTO.getVariantName())
+                            .variantColor(variantDTO.getVariantColor())
+                            .variantImage(variantDTO.getVariantImage())
+                            .build())
+                    .toList();
+            existingProduct.getVariants().clear();
+            existingProduct.getVariants().addAll(newVariants);
+        }
+        ProductEntity updatedProduct = productRepository.save(existingProduct);
+        return ResponseEntity.ok(toDAO(updatedProduct));
     }
 
-
-    private ProductEntity fromDTO(ProductDTO product) {
-        return ProductEntity.builder()
-                .name(product.getName())
-                .sku(product.getSku())
-                .category(product.getCategory())
-                .description(product.getDescription())
-                .size(product.getSize())
-                .weight(product.getWeight())
-                .price(product.getPrice())
-                .priceUnitary(product.getPriceUnitary())
-                .priceWholesale(product.getPriceWholesale())
-                .quantity(product.getQuantity())
-                .image(convertMultipartFileToBytes(product.getImage()))
+    private ProductEntity fromDTO(ProductDTO productDTO) {
+        ProductEntity product = ProductEntity.builder()
+                .name(productDTO.getName())
+                .sku(productDTO.getSku())
+                .category(productDTO.getCategory())
+                .description(productDTO.getDescription())
+                .size(productDTO.getSize())
+                .weight(productDTO.getWeight())
+                .price(productDTO.getPrice())
+                .priceUnitary(productDTO.getPriceUnitary())
+                .priceWholesale(productDTO.getPriceWholesale())
+                .quantity(productDTO.getQuantity())
+                .image(productDTO.getImage())
                 .build();
+        product.setVariants(productDTO.getVariants() != null
+                ? productDTO.getVariants().stream()
+                .map(variantDTO -> VariantProductEntity.builder()
+                        .variantName(variantDTO.getVariantName())
+                        .variantColor(variantDTO.getVariantColor())
+                        .variantImage(variantDTO.getVariantImage())
+                        .build())
+                .collect(Collectors.toCollection(ArrayList::new))
+                : new ArrayList<>());
+        return product;
     }
+
 
     private ProductDAO toDAO(ProductEntity product) {
         return ProductDAO.builder()
@@ -168,7 +175,7 @@ public class ProductService {
                 .priceUnitary(product.getPriceUnitary())
                 .priceWholesale(product.getPriceWholesale())
                 .quantity(product.getQuantity())
-                .image(product.getImage()) // Puedes convertir a URL si es necesario
+                .image(product.getImage())
                 .variants(product.getVariants() != null
                         ? product.getVariants().stream()
                         .map(variant -> VariantDAO.builder()
@@ -176,18 +183,9 @@ public class ProductService {
                                 .variantColor(variant.getVariantColor())
                                 .variantImage(variant.getVariantImage())
                                 .build())
-                        .toList()
-                        : List.of()) // Devuelve una lista vacía si es null
+                        .collect(Collectors.toCollection(ArrayList::new))
+                        : new ArrayList<>())
                 .build();
-    }
-
-
-    private byte[] convertMultipartFileToBytes(MultipartFile file) {
-        try {
-            return file.getBytes();
-        } catch (IOException e) {
-            throw new ProductException("Error converting file to byte array", e);
-        }
     }
 
 }

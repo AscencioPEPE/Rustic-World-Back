@@ -45,7 +45,7 @@ public class ProductDTO {
     private Integer quantity;
 
     @Schema(description = "Url of the product saved locally", example = "C:\\Users\\pepej\\Desktop\\Artetermos.com-master")
-    private MultipartFile image;
+    private byte[] image;
 
     @Schema(description = "List of variants", example = "1500.00")
     private List<VariantDTO> variants;
